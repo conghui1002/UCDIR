@@ -4,16 +4,14 @@ python main.py \
   -a resnet50 \
   --batch-size 64 \
   --mlp --aug-plus --cos \
-  --data-A '../datasets/domainNet-7/clipart' \
-  --data-B '../datasets/domainNet-7/sketch' \
-  --mocok-A 1959 \
-  --mocok-B 2091 \
+  --data-A '../datasets/domainNet/clipart' \
+  --data-B '../datasets/domainNet/sketch' \
   --num-cluster '7' \
   --warmup-epoch 20 \
   --temperature 0.2 \
   --exp-dir 'domainnet_clipart-sketch' \
   --lr 0.0002 \
-  --clean-model '../PCL-singlegpu_multidomain_crosssup_withsharedproto/imagenet_pretrained_model_800epoch/moco_v2_800ep_pretrain.pth.tar' \
+  --clean-model 'moco_v2_800ep_pretrain.pth.tar' \
   --instcon-weight 1.0 \
   --cwcon-startepoch 20 \
   --cwcon-satureepoch 100 \

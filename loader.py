@@ -1,15 +1,13 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import os
-import numpy as np
-from PIL import ImageFilter
 import random
-import torch.utils.data as data
+import numpy as np
 from PIL import Image
+from PIL import ImageFilter
+import torch.utils.data as data
 import torchvision.transforms as transforms
 
 
 class TwoCropsTransform:
-    """Take two random crops of one image as the query and key."""
 
     def __init__(self, base_transform):
         self.base_transform = base_transform
@@ -21,7 +19,6 @@ class TwoCropsTransform:
 
 
 class GaussianBlur(object):
-    """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
 
     def __init__(self, sigma=[.1, 2.]):
         self.sigma = sigma
@@ -36,8 +33,6 @@ def folder_content_getter(folder_path):
 
     cate_names = list(np.sort(os.listdir(folder_path)))
 
-    # ['aircraft_carrier', 'ant', 'car', 'cow', 'elephant', 'pickup_truck', 'sailboat', 'table', 'umbrella', 'wheel']
-
     image_path_list = []
     image_cate_list = []
 
@@ -51,52 +46,6 @@ def folder_content_getter(folder_path):
                 image_cate_list.append(cate_names.index(cate_name))
 
     return image_path_list, image_cate_list
-
-
-class ValDataset(data.Dataset):
-    def __init__(self,
-                 datasetA_dir,
-                 datasetB_dir):
-
-        self.datasetA_dir = datasetA_dir
-        self.datasetB_dir = datasetB_dir
-
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
-
-        self.transform = transforms.Compose([
-                         transforms.Resize(256),
-                         transforms.CenterCrop(224),
-                         transforms.ToTensor(),
-                         normalize,
-                     ])
-
-        self.image_paths_A, self.image_cates_A = folder_content_getter(datasetA_dir)
-        self.image_paths_B, self.image_cates_B = folder_content_getter(datasetB_dir)
-
-        self.domainA_size = len(self.image_paths_A)
-        self.domainB_size = len(self.image_paths_B)
-
-    def __getitem__(self, index):
-
-        index_A = np.mod(index, self.domainA_size)
-        index_B = np.mod(index, self.domainB_size)
-
-        image_path_A = self.image_paths_A[index_A]
-        image_path_B = self.image_paths_B[index_B]
-
-        image_A = self.transform(Image.open(image_path_A).convert('RGB'))
-        image_B = self.transform(Image.open(image_path_B).convert('RGB'))
-
-        target_A = self.image_cates_A[index_A]
-        target_B = self.image_cates_B[index_B]
-
-        return image_A, target_A, image_B, target_B
-
-    def __len__(self):
-
-        return max(self.domainA_size, self.domainB_size)
-
 
 class EvalDataset(data.Dataset):
     def __init__(self,

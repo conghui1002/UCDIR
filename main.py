@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import argparse
-import builtins
 import math
 import os
 import random
@@ -79,10 +77,6 @@ parser.add_argument('--exp-dir', default='experiment_pcl', type=str,
                     help='the directory of the experiment')
 parser.add_argument('--ckpt-save', default=20, type=int,
                     help='the frequency of saving ckpt')
-parser.add_argument('--mocok-A', default=120906, type=int,
-                    help='queue size; number of negative keys for domain A(default: 65536)')
-parser.add_argument('--mocok-B', default=120906, type=int,
-                    help='queue size; number of negative keys for domain B(default: 65536)')
 parser.add_argument('--num-cluster', default='250,500,1000', type=str,
                     help='number of clusters for self entropy loss')
 
@@ -140,10 +134,27 @@ def main_worker(gpu, args):
         print("Use GPU: {} for training".format(args.gpu))
 
     print("=> creating model '{}'".format(args.arch))
+
+    cudnn.benchmark = True
+
+    traindirA = os.path.join(args.data_A, 'train')
+    traindirB = os.path.join(args.data_B, 'train')
+
+    train_dataset = loader.TrainDataset(traindirA, traindirB, args.aug_plus)
+    eval_dataset = loader.EvalDataset(traindirA, traindirB)
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=True,
+        num_workers=args.workers, pin_memory=True, sampler=None, drop_last=True)
+
+    eval_loader = torch.utils.data.DataLoader(
+        eval_dataset, batch_size=args.batch_size * 2, shuffle=False,
+        num_workers=args.workers, pin_memory=True, sampler=None)
+
     model = builder.UCDIR(
         models.__dict__[args.arch],
-        dim=args.low_dim, K_A=args.mocok_A, K_B=args.mocok_B, m=args.moco_m,
-        T=args.temperature, mlp=args.mlp, selfentro_temp=args.selfentro_temp,
+        dim=args.low_dim, K_A=eval_dataset.domainA_size, K_B=eval_dataset.domainB_size,
+        m=args.moco_m, T=args.temperature, mlp=args.mlp, selfentro_temp=args.selfentro_temp,
         num_cluster=args.num_cluster,  cwcon_filterthresh=args.cwcon_filterthresh)
 
     torch.cuda.set_device(args.gpu)
@@ -173,22 +184,6 @@ def main_worker(gpu, args):
             model.load_state_dict(current_state)
         else:
             print("=> no clean model found at '{}'".format(args.clean_model))
-
-    cudnn.benchmark = True
-
-    traindirA = os.path.join(args.data_A, 'train')
-    traindirB = os.path.join(args.data_B, 'train')
-
-    train_dataset = loader.TrainDataset(traindirA, traindirB, args.aug_plus)
-    eval_dataset = loader.EvalDataset(traindirA, traindirB)
-
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True,
-        num_workers=args.workers, pin_memory=True, sampler=None, drop_last=True)
-    # dataloader for center-cropped images, use larger batch size to increase speed
-    eval_loader = torch.utils.data.DataLoader(
-        eval_dataset, batch_size=args.batch_size * 2, shuffle=False,
-        num_workers=args.workers, pin_memory=True, sampler=None)
 
     info_save = open(os.path.join(args.exp_dir, 'info.txt'), 'w')
     best_res_A = [0., 0., 0.]
@@ -380,7 +375,6 @@ def compute_features(eval_loader, model, args):
 
 
 def run_kmeans(x_A, x_B, args):
-
     print('performing kmeans clustering')
     results = {'im2cluster_A': [], 'centroids_A': [],
                'im2cluster_B': [], 'centroids_B': []}

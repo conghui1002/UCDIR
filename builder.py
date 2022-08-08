@@ -1,4 +1,3 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import torch
 import torch.nn as nn
 from functools import partial
@@ -38,11 +37,11 @@ class UCDIR(nn.Module):
 
         # create the queues
         self.register_buffer("queue_A", torch.randn(dim, K_A))
-        self.queue_A = nn.functional.normalize(self.queue_A, dim=0)
+        self.queue_A = F.normalize(self.queue_A, dim=0)
         self.register_buffer("queue_A_ptr", torch.zeros(1, dtype=torch.long))
 
         self.register_buffer("queue_B", torch.randn(dim, K_B))
-        self.queue_B = nn.functional.normalize(self.queue_B, dim=0)
+        self.queue_B = F.normalize(self.queue_B, dim=0)
         self.register_buffer("queue_B_ptr", torch.zeros(1, dtype=torch.long))
 
         self.cos_sim = torch.nn.CosineSimilarity(dim=1, eps=1e-8)
@@ -83,14 +82,13 @@ class UCDIR(nn.Module):
 
         if is_eval:
             k = self.encoder_k(im_q)
-            k = nn.functional.normalize(k, dim=1)
+            k = F.normalize(k, dim=1)
 
             k_A, k_B = torch.split(k, im_q_A.shape[0])
             return k_A, k_B
 
-        # compute query features
-        q = self.encoder_q(im_q)  # queries: NxC
-        q = nn.functional.normalize(q, dim=1)
+        q = self.encoder_q(im_q)
+        q = F.normalize(q, dim=1)
 
         q_A, q_B = torch.split(q, im_q_A.shape[0])
 
@@ -102,7 +100,7 @@ class UCDIR(nn.Module):
             im_k, idx_unshuffle = self._batch_shuffle_singlegpu(im_k)
 
             k = self.encoder_k(im_k)
-            k = nn.functional.normalize(k, dim=1)
+            k = F.normalize(k, dim=1)
 
             k = self._batch_unshuffle_singlegpu(k, idx_unshuffle)
 
@@ -282,15 +280,15 @@ class UCDIR(nn.Module):
         proto1_distlogits = self.dist_cal(feat, proto_1)
         proto2_distlogits = self.dist_cal(feat, proto_2)
 
-        loss_A_B = torch.nn.functional.pairwise_distance(proto1_distlogits, proto2_distlogits, p=2) ** 2
+        loss_A_B = F.pairwise_distance(proto1_distlogits, proto2_distlogits, p=2) ** 2
 
         return loss_A_B
 
     def dist_cal(self, feat, proto, temp=0.01):
 
-        proto_logits = torch.nn.functional.softmax(torch.matmul(feat, proto.T) / temp, dim=1)
+        proto_logits = F.softmax(torch.matmul(feat, proto.T) / temp, dim=1)
 
-        proto_distlogits = 1.0 - torch.matmul(nn.functional.normalize(proto_logits, dim=1), nn.functional.normalize(proto_logits.T, dim=0))
+        proto_distlogits = 1.0 - torch.matmul(F.normalize(proto_logits, dim=1), F.normalize(proto_logits.T, dim=0))
 
         return proto_distlogits
 
@@ -309,7 +307,7 @@ class SplitBatchNorm(nn.BatchNorm2d):
             running_mean_split = self.running_mean.repeat(self.num_splits)
             running_var_split = self.running_var.repeat(self.num_splits)
 
-            outcome = nn.functional.batch_norm(
+            outcome = F.batch_norm(
                 input.view(-1, C * self.num_splits, H, W), running_mean_split, running_var_split,
                 self.weight.repeat(self.num_splits), self.bias.repeat(self.num_splits),
                 True, self.momentum, self.eps).view(N, C, H, W)
@@ -317,6 +315,6 @@ class SplitBatchNorm(nn.BatchNorm2d):
             self.running_var.data.copy_(running_var_split.view(self.num_splits, C).mean(dim=0))
             return outcome
         else:
-            return nn.functional.batch_norm(
+            return F.batch_norm(
                 input, self.running_mean, self.running_var,
                 self.weight, self.bias, False, self.momentum, self.eps)

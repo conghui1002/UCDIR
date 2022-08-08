@@ -6,8 +6,6 @@ python main.py \
   --mlp --aug-plus --cos \
   --data-A '../datasets/Office-Home/OfficeHomeDataset_10072016/Product' \
   --data-B '../datasets/Office-Home/OfficeHomeDataset_10072016/Clipart' \
-  --mocok-A 4439 \
-  --mocok-B 4365 \
   --num-cluster '65' \
   --warmup-epoch 20 \
   --temperature 0.2 \
@@ -27,4 +25,5 @@ python main.py \
   --distofdist-weight 0.5 \
   --distofdist-startepoch 100 \
   --prec-nums '1,5,15' \
+  
 
