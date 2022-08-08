@@ -205,10 +205,8 @@ def main_worker(gpu, args):
 
         adjust_learning_rate(optimizer, epoch, args)
 
-        # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args, info_save, cluster_result)
 
-        # test for one epoch
         features_A, features_B, targets_A, targets_B = compute_features(eval_loader, model, args)
         features_A = features_A.numpy()
         targets_A = targets_A.numpy()
@@ -224,9 +222,12 @@ def main_worker(gpu, args):
             best_res_A = res_A
             best_res_B = res_B
 
-    info_save.write("Best result:\n")
-    info_save.write("Domain A->B: P@1: {}; P@5: {}; P@15: {} \n".format(best_res_A[0], best_res_A[1], best_res_A[2]))
-    info_save.write("Domain B->A: P@1: {}; P@5: {}; P@15: {} \n".format(best_res_B[0], best_res_B[1], best_res_B[2]))
+    info_save.write("Domain A->B: P@{}: {}; P@{}: {}; P@{}: {} \n".format(int(prec_nums[0]), best_res_A[0],
+                                                                          int(prec_nums[1]), best_res_A[1],
+                                                                          int(prec_nums[2]), best_res_A[2]))
+    info_save.write("Domain B->A: P@{}: {}; P@{}: {}; P@{}: {} \n".format(int(prec_nums[0]), best_res_B[0],
+                                                                          int(prec_nums[1]), best_res_B[1],
+                                                                          int(prec_nums[2]), best_res_B[2]))
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args, info_save, cluster_result):
