@@ -19,7 +19,7 @@ Clone this repository and create a virtual environment as the follows:
 * [Office-Home Dataset](https://www.hemanthdv.org/officeHomeDataset.html)
 * [DomainNet Dataset](http://ai.bu.edu/M3SDA/)
 ### Pre-trained model
-* [MoCo v2 model](https://github.com/facebookresearch/moco): Download the MoCov2 model trained after 800 epochs.
+* [MoCo v2 model](https://github.com/facebookresearch/moco): Download the MoCo v2 model trained after 800 epochs.
 
 
 ## Running
