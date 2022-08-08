@@ -19,7 +19,7 @@ Clone this repository and create a virtual environment as the follows:
 * [Office-Home Dataset](https://www.hemanthdv.org/officeHomeDataset.html)
 * [DomainNet Dataset](http://ai.bu.edu/M3SDA/)
 ### Pre-trained model
-* [MoCov2 model](https://github.com/facebookresearch/moco): Download the MoCov2 model trained after 800 epochs.
+* [MoCo v2 model](https://github.com/facebookresearch/moco): Download the MoCov2 model trained after 800 epochs.
 
 
 ## Running
@@ -34,7 +34,7 @@ CUDA_VISIBLE_DEVICES=0 ./scripts/domainnet.sh
 ```
 
 ## Acknowledgement
-This repository is built based on the source code for [MoCov2](https://github.com/facebookresearch/moco)
+This repository is built based on the source code for [MoCo v2](https://github.com/facebookresearch/moco)
 
 ## Citation
 If you find our work helpful to your reseach, please cite our paper:
